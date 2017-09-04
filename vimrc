@@ -77,7 +77,6 @@ Plugin 'vim-scripts/TwitVim'
 Plugin 'vim-scripts/gnupg.vim'
 Plugin 'vim-scripts/nginx.vim'
 Plugin 'vim-scripts/vim-geeknote'
-Plugin 'vim-scripts/vimwiki'
 Plugin 'vimprj'
 Plugin 'whatyouhide/vim-gotham'
 Plugin 'xolox/vim-misc'
@@ -203,7 +202,8 @@ set foldopen=block,insert,jump,mark,percent,quickfix,search,tag,undo
 set scrolloff=8
 
 " Allow the cursor to go in to "invalid" places
-set virtualedit=all
+" This is dumb.
+"set virtualedit=all
 
 " Disable encryption (:X)
 set key=
@@ -297,6 +297,9 @@ nmap <silent> ,qq :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . 
 " Make shift-insert work like in Xterm
 map <S-Insert> <MiddleMouse>
 map! <S-Insert> <MiddleMouse>
+
+" noremap from VimWiki
+nnoremap <silent> <Leader>vw <Plug>VimwikiIndex
 
 " set text wrapping toggles
 nmap <silent> <c-/> <Plug>WimwikiIndex
@@ -453,8 +456,8 @@ set nocursorline
 set nocursorcolumn
 
 if has("mac")
-  let g:main_font = "Source\\ Code\\ Pro\\ Medium:h11"
-  let g:small_font = "Source\\ Code\\ Pro\\ Medium:h2"
+  let g:main_font = "Source\\ Code\\ Pro\\ Light:h14"
+  let g:small_font = "Source\\ Code\\ Pro\\ Light:h2"
 else
   let g:main_font = "DejaVu\\ Sans\\ Mono\\ 9"
   let g:small_font = "DejaVu\\ Sans\\ Mono\\ 2"
@@ -989,7 +992,7 @@ iab teh        the
 if has("gui_running")
   exe "set guifont=" . g:main_font
   set background=light
-  colorscheme Atelier_LakesideLight
+  colorscheme gotham
   if !exists("g:vimrcloaded")
     winpos 0 0
     if !&diff
