@@ -175,6 +175,11 @@ set mousehide
 " Set up the gui cursor to look nice
 set guicursor=n-v-c:block-Cursor-blinkon0,ve:ver35-Cursor,o:hor50-Cursor,i-ci:ver25-Cursor,r-cr:hor20-Cursor,sm:block-Cursor-blinkwait175-blinkoff150-blinkon175
 
+if $TERM_PROGRAM =~ "iTerm"
+      let &t_SI = "\<Esc>]50;CursorShape=1\x7" " Vertical bar in insert mode
+      let &t_EI = "\<Esc>]50;CursorShape=0\x7" " Block in normal mode
+endif
+
 " set the gui options the way I like
 set guioptions=acg
 
@@ -346,7 +351,7 @@ noremap <silent> <C-9> <C-W>+
 noremap <silent> <C-0> <C-W>>
 
 " Edit the vimrc file
-nmap <silent> ,ev :e $MYVIMRC<CR>
+nmap <silent> ,ev :tabe $MYVIMRC<CR>
 nmap <silent> ,sv :so $MYVIMRC<CR>
 
 " Make horizontal scrolling easier
