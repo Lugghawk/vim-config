@@ -80,6 +80,9 @@ Plugin 'vim-scripts/vim-geeknote'
 Plugin 'vimprj'
 Plugin 'whatyouhide/vim-gotham'
 Plugin 'xolox/vim-misc'
+Plugin 'bronson/vim-trailing-whitespace'
+Plugin 'suan/vim-instant-markdown'
+Plugin 'flazz/vim-colorschemes'
 call vundle#end()
 filetype plugin indent on
 
@@ -140,14 +143,15 @@ set cpoptions=ces$
 
 function! DerekFugitiveStatusLine()
   let status = fugitive#statusline()
-  let trimmed = substitute(status, '\[Git(\(.*\))\]', '\1', '')
-  let trimmed = substitute(trimmed, '\(\w\)\w\+[_/]\ze', '\1/', '')
-  let trimmed = substitute(trimmed, '/[^_]*\zs_.*', '', '')
-  if len(trimmed) == 0
-    return ""
-  else
-    return '(' . trimmed[0:10] . ')'
-  endif
+  "let trimmed = substitute(status, '\[Git(\(.*\))\]', '\1', '')
+  "let trimmed = substitute(trimmed, '\(\w\)\w\+[_/]\ze', '\1/', '')
+  "let trimmed = substitute(trimmed, '/[^_]*\zs_.*', '', '')
+  return status
+  "if len(trimmed) == 0
+  "  return ""
+  "else
+  "  return '(' . trimmed[0:10] . ')'
+  "endif
 endfunction
 
 " Set the status line the way i like it
@@ -461,7 +465,7 @@ set nocursorline
 set nocursorcolumn
 
 if has("mac")
-  let g:main_font = "Source\\ Code\\ Pro\\ Light:h14"
+  let g:main_font = "Source\\ Code\\ Pro\\ Medium:h13"
   let g:small_font = "Source\\ Code\\ Pro\\ Light:h2"
 else
   let g:main_font = "DejaVu\\ Sans\\ Mono\\ 9"
@@ -997,7 +1001,7 @@ iab teh        the
 if has("gui_running")
   exe "set guifont=" . g:main_font
   set background=light
-  colorscheme gotham
+  colorscheme abra
   if !exists("g:vimrcloaded")
     winpos 0 0
     if !&diff
@@ -1007,6 +1011,8 @@ if has("gui_running")
     endif
     let g:vimrcloaded = 1
   endif
+else
+  colorscheme OceanicNext
 endif
 :nohls
 
@@ -1016,3 +1022,25 @@ endif
 if filereadable($HOME . "/.vimrc.local")
   execute "source " . $HOME . "/.vimrc.local"
 endif
+
+
+"-----
+" Livedown config and mappings
+"-----
+let g:livedown_port = 19876
+
+function! OpenLiveDown()
+  call system("livedown start " . expand('%:p') . " --port " . g:livedown_port . " --open &")
+endfunction
+
+nmap <silent> <Leader>md :call OpenLiveDown()<CR>
+
+
+"------
+" Colorscheme switcher settings
+"------
+source ~/.vim/setcolors.vim
+silent! SetColors all
+nmap <silent> <Leader>ec :tabe ~/.vim/setcolors.vim
+nmap <silent> <Leader>sc :source ~/.vim/setcolors.vim
+
