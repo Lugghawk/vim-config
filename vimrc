@@ -54,7 +54,6 @@ Plugin 'elzr/vim-json'
 Plugin 'endel/vim-github-colorscheme'
 Plugin 'godlygeek/tabular'
 Plugin 'gregsexton/gitv'
-" Plugin 'jceb/vim-hier'
 Plugin 'kien/ctrlp.vim'
 Plugin 'laurentgoudet/vim-howdoi'
 " let g:raindbow_active = 1
@@ -68,6 +67,7 @@ Plugin 'mileszs/ack.vim'
 Plugin 'Shougo/vimproc.vim'
 Plugin 'Shougo/unite.vim'
 Plugin 'scrooloose/nerdtree'
+Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'sjl/gundo.vim'
 Plugin 'terryma/vim-multiple-cursors'
 Plugin 'tpope/vim-fugitive'
@@ -83,6 +83,11 @@ Plugin 'xolox/vim-misc'
 Plugin 'bronson/vim-trailing-whitespace'
 Plugin 'suan/vim-instant-markdown'
 Plugin 'flazz/vim-colorschemes'
+Plugin 'zerowidth/vim-copy-as-rtf'
+Plugin 'Quramy/tsuquyomi'
+Plugin 'leafgarland/typescript-vim'
+Plugin 'jason0x43/vim-js-indent'
+Plugin 'maksimr/vim-jsbeautify'
 call vundle#end()
 filetype plugin indent on
 
@@ -155,7 +160,7 @@ function! DerekFugitiveStatusLine()
 endfunction
 
 " Set the status line the way i like it
-set stl=%f\ %m\ %r%{DerekFugitiveStatusLine()}\ Line:%l/%L[%p%%]\ Col:%v\ Buf:#%n\ [%b][0x%B]
+set stl=%f\ %m\ %r%{DerekFugitiveStatusLine()}\ Line:%l/%L[%p%%]\ Buf:#%n
 
 " tell VIM to always put a status line in, even if there is only one window
 set laststatus=2
@@ -465,11 +470,17 @@ set nocursorline
 set nocursorcolumn
 
 if has("mac")
-  let g:main_font = "Source\\ Code\\ Pro\\ Medium:h13"
-  let g:small_font = "Source\\ Code\\ Pro\\ Light:h2"
+"  let g:main_font = "Source\\ Code\\ Pro\\ Medium:h13"
+  let g:main_font = "Fira\\ Code\\ Retina:h11w1"
+" let g:small_font = "Source\\ Code\\ Pro\\ Light:h2"
+  let g:small_font = "Fira\\ Code\\ Retina:h2"
+  set macligatures
 else
-  let g:main_font = "DejaVu\\ Sans\\ Mono\\ 9"
-  let g:small_font = "DejaVu\\ Sans\\ Mono\\ 2"
+  let g:main_font = "Fira\\ Code:h12"
+" let g:small_font = "Source\\ Code\\ Pro\\ Light:h2"
+  let g:small_font = "Fira\\ Code:h2"
+" let g:main_font = "DejaVu\\ Sans\\ Mono\\ 9"
+"  let g:small_font = "DejaVu\\ Sans\\ Mono\\ 2"
 endif
 
 "-----------------------------------------------------------------------------
@@ -642,7 +653,7 @@ let g:ctrlp_working_path_mode = 'rc'
 let g:ctrlp_root_markers = ['.project.root']
 " let g:ctrlp_user_command = 'find %s -type f | grep -E "\.(gradle|sbt|conf|scala|java|rb|sh|bash|py|json|js|xml)$" | grep -v -E "/build/|/quickfix|/resolution-cache|/streams|/admin/target|/classes/|/test-classes/|/sbt-0.13/|/cache/|/project/target|/project/project|/test-reports|/it-classes"'
 " let g:ctrlp_user_command = 'find %s -type f | grep -v -E "\.git/|/build/|/quickfix|/resolution-cache|/streams|/admin/target|/classes/|/test-classes/|/sbt-0.13/|/cache/|/project/target|/project/project|/test-reports|/it-classes|\.jar$"'
-let g:ctrlp_user_command = 'find %s -type f | grep -v -E "\.git/|/build/|/target|/project/project|\.jar$"'
+let g:ctrlp_user_command = 'find %s -type f | grep -v -E "\.git/|/build/|/target|/project/project|\.idea|node_modules|\.jar$"'
 let g:ctrlp_max_depth = 30
 let g:ctrlp_max_files = 0
 let g:ctrlp_open_new_file = 'r'
@@ -660,6 +671,7 @@ nmap ,fF :execute ":CtrlP " . expand('%:p:h')<cr>
 nmap ,fr :call LaunchForThisGitProject("CtrlP")<cr>
 nmap ,fm :CtrlPMixed<cr>
 nmap ,fC :CtrlPClearCache<cr>
+nmap ,ft :CtrlPTag<cr>
 
 "-----------------------------------------------------------------------------
 " Gundo Settings
@@ -1001,7 +1013,9 @@ iab teh        the
 if has("gui_running")
   exe "set guifont=" . g:main_font
   set background=light
-  colorscheme abra
+  "colorscheme abra
+  "colorscheme Atelier_LakesideLight
+  colorscheme onedark
   if !exists("g:vimrcloaded")
     winpos 0 0
     if !&diff
@@ -1044,3 +1058,64 @@ silent! SetColors all
 nmap <silent> <Leader>ec :tabe ~/.vim/setcolors.vim
 nmap <silent> <Leader>sc :source ~/.vim/setcolors.vim
 
+"------
+"NERDTree mappings
+"------
+nmap <silent> <Leader>nt :NERDTree<CR>
+nmap <silent> <Leader>nc :NERDTreeClose<CR>
+
+function! s:MkNonExDir(file, buf)
+    if empty(getbufvar(a:buf, '&buftype')) && a:file!~#'\v^\w+\:\/'
+        let dir=fnamemodify(a:file, ':h')
+        if !isdirectory(dir)
+            call mkdir(dir, 'p')
+        endif
+    endif
+endfunction
+augroup BWCCreateDir
+    autocmd!
+    autocmd BufWritePre * :call s:MkNonExDir(expand('<afile>'), +expand('<abuf>'))
+augroup END
+
+function! ScalaImport(tag)
+  let tags = taglist(a:tag)
+  let import = ''
+  for t in tags
+    let pack = substitute(system('grep ^package ' . t['filename'] . ' | head | cut -f2 -d" "'), '\n\+$', '', '')
+    if pack != ''
+      let import = 'import ' . pack . '.' . a:tag
+      break
+    endif
+  endfor
+  return import
+endfunction
+
+function! ScalaImportToClipboard(tag)
+  let import = ScalaImport(a:tag)
+  if import != ''
+    let @* = import
+  else
+    echoerr 'Unable to find proper import for ' . a:tag
+  endif
+endfunction
+
+function! AddScalaImportToThisFile(tag)
+  let import = ScalaImport(a:tag)
+  if import != ''
+    normal mz
+    execute ':/package/+ normal o' . import
+    call SortScalaImports()
+    normal `z
+  else
+    echoerr 'Unable to find proper import for ' . a:tag
+  endif
+endfunction
+
+nmap <buffer> <silent> ,it :call AddScalaImportToThisFile(expand("<cword>"))<cr>
+nmap <buffer> <silent> ,si :call ScalaImportToClipboard(expand("<cword>"))<cr>
+
+
+augroup dave_scala
+  autocmd!
+  autocmd BufWritePre *.scala :call SortScalaImports()
+augroup END
